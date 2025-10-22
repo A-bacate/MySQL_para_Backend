@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+      body { margin: 20px; font-family: Arial, sans-serif; }
+      h2 { text-align: center; }
+      form { max-width: 300px; margin: auto; }
+      label { display: block; margin-top: 10px; }
+      input { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+      button { width: 100%; padding: 10px; margin-top: 15px; color: white; border: none; cursor: pointer; }
+      .btn-entrar { background: #007bff; }
+      .btn-entrar:hover { background: #0056b3; }
+    </style>
+  </head>
+  <body>
+    <h2>Login</h2>
+    <form>
+      <label>Usuario: <input type="text" id="usuario"></label>
+      <label>Senha: <input type="password" id="senha"></label>
+      <button type="button" class="btn-entrar" onclick="enviar()">Entrar</button>
+    </form>
+
+    <script>
+      function enviar() {
+      
+        let usuario = document.getElementById("usuario").value;
+        let senha = document.getElementById("senha").value;
+
+        fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ usuario, senha })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {      
+            // salva os dados no localStorage
+            localStorage.setItem('usuarioLogado', data.usuario);
+            localStorage.setItem('nomeUsuario', data.nome);
+            localStorage.setItem('sessionToken', data.sessionToken);
+
+            // redireciona 
+            window.location.href = "http://localhost:3000/produtos";
+
+          } else {
+            alert("Usuário ou senha inválidos");
+          }
+        })
+      }
+    </script>
+  </body>
+</html>

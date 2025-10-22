@@ -1,0 +1,1 @@
+npm install express mysql cors path bcrypt crypto config

@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/A-bacate/MySQL_para_Backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/A-bacate/MySQL_para_Backend/issues"
+  },
+  "homepage": "https://github.com/A-bacate/MySQL_para_Backend#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "config": "^4.1.1",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "express": "^5.1.0",
+    "mysql": "^2.18.1",
+    "path": "^0.12.7"
+  }
+}

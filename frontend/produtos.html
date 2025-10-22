@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        h1 {
+            color: #333;
+            margin: 0;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logout-btn {
+            background: #d33;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .product-name {
+            font-weight: bold;
+        }
+        
+        .product-details {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .product-price {
+            color: #2a8f2a;
+            font-weight: bold;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .decrease {
+            color: #d33;
+        }
+        
+        .increase {
+            color: #2a8f2a;
+        }
+        
+        .quantity-display {
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .low-stock {
+            color: #d33;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Controle de Estoque</h1>
+            <div class="user-info">
+                <span>Bem-vindo, <span id="nome-usuario"></span></span>
+                <button class="logout-btn" onclick="fazerLogout()">Sair</button>
+            </div>
+        </header>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Detalhes</th>
+                    <th>Preço</th>
+                    <th>Quantidade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="productList">
+                <!-- Produtos serão carregados aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Recupera o nome do usuário do localStorage
+            const usuarioLogado = localStorage.getItem('usuarioLogado');
+            const nomeUsuario = localStorage.getItem('nomeUsuario');
+            const sessionToken = localStorage.getItem('sessionToken');     
+            
+            console.log(usuarioLogado, nomeUsuario, sessionToken);
+            
+            
+            if (sessionToken) {
+                // Exibe o nome do usuário na página    
+                document.getElementById('nome-usuario').textContent = nomeUsuario;
+
+                // Carrega os produtos da API
+                carregarProdutos();
+            } else {
+                // Se não houver usuário logado, redireciona para login
+                window.location.href = '/';
+            }
+        });
+
+        // Função para carregar produtos
+        function carregarProdutos() {
+            fetch("http://localhost:3000/produtos/lista", {
+                method: "GET",
+                headers: { 
+                    "Content-Type": "application/json"
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar produtos');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const productList = document.getElementById('productList');
+                productList.innerHTML = ''; 
+
+                if (data.length === 0) {
+                    productList.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 30px; color: #666;">
+                                Nenhum produto encontrado.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }                
+
+                data.forEach(product => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td class="product-name">${product.nome || 'Sem nome'}</td>
+                        <td class="product-details">
+                            ${product.marca ? `<div>Marca: ${product.marca}</div>` : ''}
+                            ${product.cor ? `<div>Cor: ${product.cor}</div>` : ''}
+                            ${product.peso ? `<div>Peso: ${product.peso}</div>` : ''}
+                        </td>
+                        <td class="product-price">R$ ${(product.preco || 0)}</td>
+                        <td>
+                            <span class="quantity-display ${(product.quantidade || 0) <= 2 ? 'low-stock' : ''}">
+                                ${product.quantidade || 0}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="quantity-controls">
+                                <button class="quantity-btn decrease" onclick="atualizarQuantidade(${product.id}, -1)">-</button>
+                                <button class="quantity-btn increase" onclick="atualizarQuantidade(${product.id}, 1)">+</button>
+                            </div>
+                        </td>
+                    `;
+
+                    productList.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                const productList = document.getElementById('productList');
+                productList.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 30px; color: #d33;">
+                            Erro ao carregar produtos.
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+
+        function atualizarQuantidade(productId, change) {
+             fetch(`http://localhost:3000/produtos/atualizar/${productId}`, {
+                method: "PUT",
+                headers: { 
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 
+                    change: change,
+                    usuario: localStorage.getItem('usuarioLogado'), 
+                    sessionToken: localStorage.getItem('sessionToken')
+                 })
+            }) 
+            .then(response => {                
+                if (!response.ok) {
+                    throw new Error('Erro ao atualizar quantidade');
+                }
+
+                // alterar quantidade no html
+                carregarProdutos();                
+            })
+        }
+
+        
+        function fazerLogout() {
+            localStorage.removeItem('usuarioLogado');
+            localStorage.removeItem('nomeUsuario');
+            localStorage.removeItem('sessionToken');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
